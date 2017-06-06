@@ -1,0 +1,9 @@
+BindingSitePredictionSet.txt filter=lfs diff=lfs merge=lfs -text
+BindingSiteSet.txt filter=lfs diff=lfs merge=lfs -text
+TFSet.txt filter=lfs diff=lfs merge=lfs -text
+TF_predicted.txt filter=lfs diff=lfs merge=lfs -text
+colombos_ecoli_exprdata_20151029.txt filter=lfs diff=lfs merge=lfs -text
+colombos_ecoli_refannot_20151029.txt filter=lfs diff=lfs merge=lfs -text
+colombos_ecoli_testannot_20151029.txt filter=lfs diff=lfs merge=lfs -text
+network_tf_gene.txt filter=lfs diff=lfs merge=lfs -text
+ecoli_compendium_data.zip filter=lfs diff=lfs merge=lfs -text
