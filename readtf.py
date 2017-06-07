@@ -15,14 +15,14 @@ database = 'bimm185'
 
 def query_gene(conn, gene):
 	cur=conn.cursor()
-	sql_statement = ("SELECT gene_id, name FROM GENES WHERE name='{gene}'".format(gene=gene))
+	sql_statement = ("SELECT gene_id, name FROM GENES WHERE name='{gene}' and genome_id = 1".format(gene=gene))
 	cur.execute(sql_statement)
 	result = cur.fetchone()
 	return result
 
 def query_gene_locau_tag(conn, locus_tag):
 	cur = conn.cursor()
-	sql_statement = ("SELECT gene_id, name FROM genes WHERE locus_tag = '{locus_tag}'".format(locus_tag=locus_tag))
+	sql_statement = ("SELECT gene_id, name FROM genes WHERE locus_tag = '{locus_tag}' and genome_id = 1".format(locus_tag=locus_tag))
 	cur.execute(sql_statement)
 
 	result = cur.fetchone()
@@ -34,7 +34,7 @@ def query_gene_locau_tag(conn, locus_tag):
 
 def query_synonyms(conn, gene):
 	cur=conn.cursor()
-	sql_statement = ("SELECT genes.gene_id, name FROM gene_synonyms inner join genes on gene_synonyms.gene_id = genes.gene_id WHERE synonym='{gene}'".format(gene=gene))
+	sql_statement = ("SELECT genes.gene_id, name FROM gene_synonyms inner join genes on gene_synonyms.gene_id = genes.gene_id WHERE synonym='{gene}' and genes.genome_id = 1".format(gene=gene))
 	cur.execute(sql_statement)
 	result = cur.fetchone()
 	return result
@@ -151,7 +151,7 @@ def read_gene_products():
 				gene_products[line[1]] = line[2]
 	return gene_products
 
-def read_tf_gene(myConnection):
+def read_tf_gene(myConnection, gene_products):
 	create_table(myConnection)
 	tf_gene_file = open("tf_gene.txt",'w')
 
@@ -162,7 +162,6 @@ def read_tf_gene(myConnection):
 			else:
 				line = line.strip().split('\t')
 				if line[-1] == "Strong"  or len(line[-2].split(',')) > 1:
-					count += 1
 					result = query_gene(myConnection,line[1])
 					if result is None:
 						if line[1] in gene_products:
@@ -172,7 +171,7 @@ def read_tf_gene(myConnection):
 							result = query_synonyms(myConnection, line[1])
 
 					if result is not None:
-						#print(result[0],result[1],sep="\t")
+						print(result[0],result[1], sep="\t")
 						tf_gene_file.write(line[0]+"\t"+str(result[0])+"\t"+result[1]+'\t'+ line[2]+"\n")
 
 	import_tf_gene(myConnection)
@@ -219,7 +218,8 @@ def read_operons(myConnection):
 def read_colombos(myConnection):
 	create_colombos(myConnection)
 	
-	colombos_file = open("colombos.txt",'w')
+	#colombos_file = open("colombos.txt",'w')
+	colombos = {}
 	with open("colombos_ecoli_exprdata_20151029.txt",'r') as file:
 
 		for i in range(6):
@@ -233,13 +233,16 @@ def read_colombos(myConnection):
 			scores = line[3:]
 			result = query_gene_locau_tag(myConnection,b_num)
 			if result is not None:
-				for i in range(len(attrs)):
-					if scores[i] == "NaN":
-						continue
-					colombos_file.write(str(result[0])+'\t' + scores[i] + '\t' + attrs[i] +'\n')
+				colombos[result[0]] = scores
+				#for i in range(len(attrs)):
+				#	if scores[i] == "NaN":
+				#		continue
+					#colombos_file.write(str(result[0])+'\t' + scores[i] + '\t' + attrs[i] +'\n')
 
 	
-	import_colombos(myConnection)
+	#import_colombos(myConnection)
+	#colombos_file.close()
+	return colombos
 
 
 def main():
@@ -250,32 +253,38 @@ def main():
 	read_operons(myConnection)
 	read_colombos(myConnection)
 	'''
+	#gene_products = read_gene_products()
+	#read_tf_gene(myConnection, gene_products)
+	colombos = read_colombos(myConnection)
 	
 
 
 	gene_pairs = query_gene_pairs(myConnection)
 	rhos = []
 	distances = []
-	for gp in gene_pairs[:20]:
+	for gp in gene_pairs:
 		g1 = gp[0]
 		g2 = gp[1]
-		expressions = query_expressions(myConnection, g1, g2)
-		e1=[]
-		e2=[]
+		e1=colombos[g1]
+		e2=colombos[g2]
+		#expressions = query_expressions(myConnection, g1, g2)
+		#e1=[]
+		#e2=[]
 		positions = query_gene_position(myConnection, g1, g2)
 		left = positions[1][0]
 		right = positions[0][1]
 		distance = left - right
-		distances.append(distance)
-		for e in expressions:
-			e1.append(e[0])
-			e2.append(e[1])
+		#distances.append(distance)
+		#for e in expressions:
+		#	e1.append(e[0])
+		#	e2.append(e[1])
 
 		rho, pvalue = scipy.stats.spearmanr(e1, e2)
-		rhos.append(rho)
+		#rhos.append(rho)
 		print(g1, g2, positions, distance,rho, pvalue)
+		plt.plot(distance, rho)
 	
-	plt.plot(distances, rhos,'ro')
+	#plt.plot(distances, rhos,'ro')
 	plt.show()
 
 
