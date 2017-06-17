@@ -137,6 +137,14 @@ def query_gene_position(conn, g1, g2):
 	result = cur.fetchall()
 	return result
 
+def query_operon_pairs(conn):
+	cur = conn.cursor()
+	sql_statement = ("select o1.gene_id ,o2.gene_id from operons o1, operons o2 where o1.operon_id = o2.operon_id and o1.gene_id < o2.gene_id")
+	cur.execute(sql_statement)
+	result = cur.fetchall()
+	return result
+
+
 def read_gene_products():
 	gene_products = {}
 	with open("GeneProductSet.txt",'r') as file:
@@ -258,11 +266,12 @@ def main():
 	colombos = read_colombos(myConnection)
 	
 
-
+	'''
 	gene_pairs = query_gene_pairs(myConnection)
 	rhos = []
 	unique_rhos = []
 	distances = []
+	pairs = {}
 	for gp in gene_pairs:
 		g1 = gp[0]
 		g2 = gp[1]
@@ -275,17 +284,23 @@ def main():
 		left = positions[1][0]
 		right = positions[0][0]
 		distance = left - right
-		distances.append(distance)
+		#distances.append(distance)
 		#for e in expressions:
 		#	e1.append(e[0])
 		#	e2.append(e[1])
 
 		rho, pvalue = scipy.stats.spearmanr(e1, e2)
-		rhos.append(rho)
+		if (g2, g1) not in pairs:
+			pairs[(g1, g2)] = [rho, distance]
+		else:
+			pairs[(g2, g1)][0] = (pairs[(g2, g1)][0] * rho) ** 0.5
+
+
+		#rhos.append(rho)
 		if rho not in unique_rhos:
 			unique_rhos.append(rho)
 
-		print(distance, rho)
+		#print(distance, rho)
 		#plt.plot(distance, rho)
 	#unique_rhos = sorted(unique_rhos)
 
@@ -297,11 +312,86 @@ def main():
 	#for i in range(10000):
 	#	print(distance[i], ranks[i])
 
+	for key in pairs.keys():
+		print(pairs[key][1], pairs[key][0], sep="\t")
+
 
 
 	
 	#plt.plot(distances, rhos,'ro')
 	#plt.show()
+	'''
+
+	#Test with operon pairs
+	
+	means = {}
+	gene_pairs = query_operon_pairs(myConnection)
+	distances = []
+	rhos = []
+	for gp in gene_pairs:
+		g1 = gp[0]
+		g2 = gp[1]
+		e1=colombos[g1]
+		e2=colombos[g2]
+		#expressions = query_expressions(myConnection, g1, g2)
+		#e1=[]
+		#e2=[]
+		positions = query_gene_position(myConnection, g1, g2)
+		left = positions[1][0]
+		right = positions[0][0]
+		distance = left - right
+		distance = min(4641652-distance, distance)
+		distances.append(distance)
+		#for e in expressions:
+		#	e1.append(e[0])
+		#	e2.append(e[1])
+
+		rho, pvalue = scipy.stats.spearmanr(e1, e2)
+
+
+		rhos.append(rho)
+		print(distance, rho)
+		if distance in means:
+			means[distance].append(rho)
+		else:
+			means[distance] = [rho]
+
+	
+
+		#print(distance, rho)
+		#plt.plot(distance, rho)
+	#unique_rhos = sorted(unique_rhos)
+	#plt.plot(distances, rhos, "ro")
+	#plt.show()
+
+	#calculate mean
+
+	'''
+	ds = []
+	ms = []
+	for key in means.keys():
+		ds.append(key)
+		ms.append(sum(means[key])/len(means[key]))
+	'''
+
+	means = {}
+	with open("operons_rho.out", "r") as file:
+		for line in file:
+			line = line.strip().split(" ")
+			if line[0] in means:
+				means[line[0]].append(float(line[1]))
+			else:
+				means[line[0]] = [float(line[1])]
+	ds = []
+	ms = []
+	for key in means.keys():
+		ds.append(key)
+		ms.append(sum(means[key])/len(means[key]))
+
+	plt.plot(ds, ms, "ro")
+	plt.show()
+
+
 
 
 
