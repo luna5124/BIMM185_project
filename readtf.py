@@ -261,6 +261,7 @@ def main():
 
 	gene_pairs = query_gene_pairs(myConnection)
 	rhos = []
+	unique_rhos = []
 	distances = []
 	for gp in gene_pairs:
 		g1 = gp[0]
@@ -272,20 +273,35 @@ def main():
 		#e2=[]
 		positions = query_gene_position(myConnection, g1, g2)
 		left = positions[1][0]
-		right = positions[0][1]
+		right = positions[0][0]
 		distance = left - right
-		#distances.append(distance)
+		distances.append(distance)
 		#for e in expressions:
 		#	e1.append(e[0])
 		#	e2.append(e[1])
 
 		rho, pvalue = scipy.stats.spearmanr(e1, e2)
-		#rhos.append(rho)
-		print(g1, g2, positions, distance,rho, pvalue)
-		plt.plot(distance, rho)
+		rhos.append(rho)
+		if rho not in unique_rhos:
+			unique_rhos.append(rho)
+
+		print(distance, rho)
+		#plt.plot(distance, rho)
+	#unique_rhos = sorted(unique_rhos)
+
+	#ranks = []
+	#for i in range(10000):
+	#	index = unique_rhos.index(rhos[i]) + 1
+	#	ranks.append(index)
+
+	#for i in range(10000):
+	#	print(distance[i], ranks[i])
+
+
+
 	
 	#plt.plot(distances, rhos,'ro')
-	plt.show()
+	#plt.show()
 
 
 
