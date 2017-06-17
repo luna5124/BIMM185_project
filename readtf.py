@@ -284,6 +284,7 @@ def main():
 		left = positions[1][0]
 		right = positions[0][0]
 		distance = left - right
+		distance = min(4641652-distance, distance)
 		#distances.append(distance)
 		#for e in expressions:
 		#	e1.append(e[0])
