@@ -1,3 +1,9 @@
+#This code calculates the rho and distance by:
+#1. querying gene pairs from the database
+#2. reading the expression data from colombos file
+#3. need to uncomment the operon reading part to store the operon info into the database
+
+
 import gzip
 import sys
 import os
@@ -255,6 +261,8 @@ def read_colombos(myConnection):
 
 def main():
 	myConnection = pymysql.connect(host=hostname, user=username, passwd=password, db=database, local_infile=True, autocommit=True)
+	
+	#uncomment these parts to read the data if needed
 	'''
 	gene_products = read_gene_products()
 	read_tf_gene(myConnection)

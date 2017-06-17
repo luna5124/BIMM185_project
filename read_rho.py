@@ -1,3 +1,6 @@
+#This code read in the dis and rho input, sort by rho, 
+#convert rho into rank by the biggest rho has the smallest rank
+#Plot distance vs rho
 import matplotlib.pyplot as plt
 
 distances = []
